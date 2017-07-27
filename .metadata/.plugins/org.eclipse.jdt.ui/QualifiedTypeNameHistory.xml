@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="org.apache.spark.SparkConf"/>
+<fullyQualifiedTypeName name="org.apache.spark.api.java.JavaSparkContext"/>
+<fullyQualifiedTypeName name="org.apache.spark.api.java.JavaRDD"/>
+</qualifiedTypeNameHistroy>
