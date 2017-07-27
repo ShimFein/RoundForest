@@ -1,0 +1,90 @@
+package amazon_data_analyzer;
+
+import static org.apache.spark.sql.functions.count;
+import static org.apache.spark.sql.functions.desc;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+
+public class AmazonDataAnalyzer {
+	
+	private SparkSession sparkSession;
+	private Dataset<Row> ds;
+	
+	public AmazonDataAnalyzer() {
+					
+		// create spark Session
+		sparkSession = SparkSession.builder().master("local").appName("RoundForest Amazon Analyzer").getOrCreate();
+	}
+	
+	public void readFile (String csvFile){
+		HashMap<String, String> options = new HashMap<String, String>();
+	    options.put("header", "true");
+	    options.put("path", csvFile);
+	    ds = sparkSession.read().option("header", "true").csv(csvFile);
+	    ds.show(10);
+	}
+	
+	public Dataset<Row> findMostActiveUsers(int maxRows){		
+		return ds.groupBy("ProfileName").agg( count("ProfileName").alias("ProfileNameCount")).sort(desc("ProfileNameCount")).limit(maxRows).orderBy("ProfileName");
+	}
+	
+	public  Dataset<Row> findMostCommentedFoodItems(int maxRows){
+		return ds.groupBy("ProductId").agg( count("ProductId").alias("ProductIdCount")).sort(desc("ProductIdCount")).limit(maxRows).orderBy("ProductId");
+	}
+	
+	public Dataset<String> findMostUsedWords(int MaxRows){
+/*		val lines = sc.textFile("data.txt").toDF("line")
+				val df = lines.explode("line","word")((line: String) => line.split(" "))
+				val sortedDF = df.groupBy("word").count().sort(desc("count"))
+				val data = sortedDF.take(5)*/
+		/*ds.flatMap(s -> Arrays.asList(s.split(" ")).iterator()).mapToPair(word -> new Tuple2<>(word, 1))
+	    .reduceByKey((a, b) -> a + b);*/
+		
+		Dataset<String> text = ds.map((MapFunction<Row, String>) row -> row.<String>getAs("Text"), Encoders.STRING());
+		Dataset<String> words = text.flatMap(s -> {return  Arrays.asList(s.toLowerCase().split(" ")).iterator(); 
+								}, Encoders.STRING())
+				.filter(s -> !s.isEmpty())
+				.coalesce(1); //one partition (parallelism level)
+	words.printSchema();
+	//	text.show(10);
+	//	Dataset<String> newText = text.flatMap((FlatMapFunction<String, String>) s -> {
+	//		return  Arrays.asList(s.split("\\s+")).iterator();
+	//	}, Encoders.STRING());
+	//	newText.show(10);
+		
+	//	ds.flatMap(FlatMapFunction<Row,String> row -> , encoder)
+		
+		/*ds.flatMap(  new FlatMapFunction<String, String>() { public Iterable<String> call(String s) {
+      return Arrays.asList(s.split("\\s*,\\s*"));*/
+    
+		return words;
+	}
+	
+
+	public static void main(String[] args) {
+		
+		String reviewsFile = "src/main/resources/Reviews.csv";
+		
+		AmazonDataAnalyzer dataAnalyzer = new AmazonDataAnalyzer();
+		 
+		dataAnalyzer.readFile(reviewsFile);
+//		Dataset<Row> userDataSet = dataAnalyzer.findMostActiveUsers(1000);
+//		userDataSet.show(10);
+		
+//		Dataset<Row> foodItemDataSet = dataAnalyzer.findMostCommentedFoodItems(1000);
+//		foodItemDataSet.show(10);	
+		
+		Dataset<String> mostUsedWordsDataFrame = dataAnalyzer.findMostUsedWords(1000);
+		mostUsedWordsDataFrame.show(10);
+	}
+
+}
