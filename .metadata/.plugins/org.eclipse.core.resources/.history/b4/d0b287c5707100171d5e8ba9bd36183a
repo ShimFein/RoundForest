@@ -1,0 +1,36 @@
+package amazon_data_analyzer;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.spark.sql.Row;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+public class AmazonDataAnalyzerTest {
+	
+	public static final String TEST_CSV_FILE_PATH = "src/test/resources";
+	
+	@BeforeClass
+	public static void setUpBeforeClass() throws Exception {
+	}
+
+	@Test
+	public void testMostActiveUsers() {
+		List<Row> actualMostActiveUserList = new ArrayList<String>();
+		List<String> expectedMostActiveUserList;
+		AmazonDataAnalyzer testAnalyser = new AmazonDataAnalyzer();
+		expectedMostActiveUserList.add("A1MZYO9TZK0BBI");
+		expectedMostActiveUserList.add("A1UQRSCLF8GW1T");
+		expectedMostActiveUserList.add("A3HDKO7OW0QNK4");
+		expectedMostActiveUserList.add("A3SGXH7AUHU8GW");
+		
+		if (testAnalyser.readFile(TEST_CSV_FILE_PATH) == true) {
+			actualMostActiveUserList = testAnalyser.findMostActiveUsers(1000);
+		}
+		assertEquals(expectedMostActiveUserList,actualMostActiveUserList);
+	}
+
+}

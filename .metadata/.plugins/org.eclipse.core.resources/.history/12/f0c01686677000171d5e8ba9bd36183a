@@ -1,0 +1,84 @@
+package amazon_data_analyzer;
+
+import static org.apache.spark.sql.functions.count;
+import static org.apache.spark.sql.functions.desc;
+
+import java.util.HashMap;
+
+import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+
+public class AmazonDataAnalyzer {
+	
+	private SparkSession sparkSession;
+	private Dataset<Row> ds;
+	
+	public AmazonDataAnalyzer() {
+					
+		// create spark Session
+		sparkSession = SparkSession.builder().master("local").appName("RoundForest Amazon Analyzer").getOrCreate();
+	}
+	
+	public void readFile (String csvFile){
+		HashMap<String, String> options = new HashMap<String, String>();
+	    options.put("header", "true");
+	    options.put("path", csvFile);
+	    ds = sparkSession.read().option("header", "true").csv(csvFile);
+	    ds.show(10);
+	}
+	
+	public Dataset<Row> findMostActiveUsers(int maxRows){		
+		return ds.groupBy("ProfileName").agg( count("ProfileName").alias("ProfileNameCount")).sort(desc("ProfileNameCount")).limit(maxRows).orderBy("ProfileName");
+	}
+	
+	public  Dataset<Row> findMostCommentedFoodItems(int maxRows){
+		return ds.groupBy("ProductId").agg( count("ProductId").alias("ProductIdCount")).sort(desc("ProductIdCount")).limit(maxRows).orderBy("ProductId");
+	}
+	
+	public String findMostUsedWords(int MaxRows){
+/*		val lines = sc.textFile("data.txt").toDF("line")
+				val df = lines.explode("line","word")((line: String) => line.split(" "))
+				val sortedDF = df.groupBy("word").count().sort(desc("count"))
+				val data = sortedDF.take(5)*/
+		/*ds.flatMap(s -> Arrays.asList(s.split(" ")).iterator()).mapToPair(word -> new Tuple2<>(word, 1))
+	    .reduceByKey((a, b) -> a + b);*/
+		Dataset<Integer> years = ds.map((MapFunction<Row, Integer>) row -> row.<Integer>getAs("YEAR"), Encoders.INT());
+
+		Dataset<String> textDS = ds.map((MapFunction<Row,String> row -> row.<String>getAs("TEXT"), null), Encoders.STRING());
+		
+		Dataset<Integer> years = file8Data.map((MapFunction<Row, Integer>) row -> row.<Integer>getAs("YEAR"), Encoders.INT());
+		Dataset<Integer> newYears = years.flatMap((FlatMapFunction<Integer, Integer>) year -> {
+		  return Arrays.asList(year + 1, year + 2).iterator();
+		}, Encoders.INT());
+		
+		
+		
+		ds.flatMap( new FlatMapFunction<String, String>() { public Iterable<String> call(String s) {
+      return Arrays.asList(s.split("\\s*,\\s*"));
+		
+		/*ds.flatMap(  new FlatMapFunction<String, String>() { public Iterable<String> call(String s) {
+      return Arrays.asList(s.split("\\s*,\\s*"));*/
+    }});
+		return "l";
+	}
+	
+
+	public static void main(String[] args) {
+		
+		String reviewsFile = "src/main/resources/Reviews.csv";
+		
+		AmazonDataAnalyzer dataAnalyzer = new AmazonDataAnalyzer();
+		 
+		dataAnalyzer.readFile(reviewsFile);
+		Dataset<Row> userDataFrame = dataAnalyzer.findMostActiveUsers(1000);
+		userDataFrame.show(10);
+		
+		Dataset<Row> foodItemDataFrame = dataAnalyzer.findMostCommentedFoodItems(1000);
+		foodItemDataFrame.show(10);	
+
+	}
+
+}
