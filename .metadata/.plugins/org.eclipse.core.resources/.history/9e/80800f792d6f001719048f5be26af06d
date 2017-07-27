@@ -1,0 +1,62 @@
+package amazon_data_analyzer;
+
+import java.util.HashMap;
+
+import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
+
+public class AmazonDataAnalyzer {
+	
+//	SparkConf conf;
+	SparkSession sparkSession;
+	SQLContext sqlContext;
+	Dataset<Row> ds;
+	
+	public AmazonDataAnalyzer() {
+		
+//		conf = new SparkConf().setAppName("JavaWordCount").setMaster("local");
+			
+		// create spark Session
+		sparkSession = SparkSession.builder().master("local").appName("RoundForest Amazon Analyzer").getOrCreate();
+	}
+	
+	public void readFile (String csvFile){
+		HashMap<String, String> options = new HashMap<String, String>();
+	    options.put("header", "true");
+	    options.put("path", csvFile);
+	    ds = sparkSession.read().option("header", "true").csv(csvFile);
+	}
+	
+	public Dataset<Row> findMostActiveUsers(int maxRows){
+		return ds.groupBy("ProfileName").count().limit(maxRows).orderBy("ProfileName");
+	}
+	
+	public String findMostCommentedFoodItems(int maxRows){
+		
+		return "l";
+	}
+	
+	public String findMostUsedWords(int MaxRows){
+		
+		return "l";
+	}
+	
+
+	public static void main(String[] args) {
+		
+		String reviewsFile = "src/main/resources/Reviews.csv";
+		
+		AmazonDataAnalyzer dataAnalyzer = new AmazonDataAnalyzer();
+		 
+		dataAnalyzer.readFile(reviewsFile);
+		Dataset<Row> userDataFrame = dataAnalyzer.findMostActiveUsers(1000);
+		System.out.println(userDataFrame.toString());
+		
+
+	}
+
+}

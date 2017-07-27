@@ -1,0 +1,67 @@
+package amazon_data_analyzer;
+
+import java.util.HashMap;
+
+import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.catalyst.expressions.aggregate.Average;
+import static org.apache.spark.sql.functions.*;
+
+public class AmazonDataAnalyzer {
+	
+//	SparkConf conf;
+	private SparkSession sparkSession;
+	private SQLContext sqlContext;
+	private Dataset<Row> ds;
+	
+	public AmazonDataAnalyzer() {
+		
+//		conf = new SparkConf().setAppName("JavaWordCount").setMaster("local");
+			
+		// create spark Session
+		sparkSession = SparkSession.builder().master("local").appName("RoundForest Amazon Analyzer").getOrCreate();
+	}
+	
+	public void readFile (String csvFile){
+		HashMap<String, String> options = new HashMap<String, String>();
+	    options.put("header", "true");
+	    options.put("path", csvFile);
+	    ds = sparkSession.read().option("header", "true").csv(csvFile);
+	    ds.show(10);
+	}
+	
+	public Dataset<Row> findMostActiveUsers(int maxRows){		
+//		return ds.groupBy("ProfileName").agg( count("ProfileName").alias("ProfileNameCount")).limit(maxRows).orderBy("ProfileName");
+		return ds.groupBy("ProfileName").agg( count("ProfileName").alias("ProfileNameCount")).sort(desc("ProfileNameCount")).limit(maxRows).orderBy("ProfileName");
+	}
+	
+	public  Dataset<Row> findMostCommentedFoodItems(int maxRows){
+		return ds.groupBy("ProductId").agg( count("ProductId").alias("ProductIdCount")).sort(desc("ProductIdCount")).limit(maxRows).orderBy("ProductId");
+	}
+	
+	public String findMostUsedWords(int MaxRows){
+/*		val lines = sc.textFile("data.txt").toDF("line")
+				val df = lines.explode("line","word")((line: String) => line.split(" "))
+				val sortedDF = df.groupBy("word").count().sort(desc("count"))
+				val data = sortedDF.take(5)*/
+		return "l";
+	}
+	
+
+	public static void main(String[] args) {
+		
+		String reviewsFile = "src/main/resources/Reviews.csv";
+		
+		AmazonDataAnalyzer dataAnalyzer = new AmazonDataAnalyzer();
+		 
+		dataAnalyzer.readFile(reviewsFile);
+		Dataset<Row> userDataFrame = dataAnalyzer.findMostActiveUsers(1000);
+		userDataFrame.show(1000);		
+
+	}
+
+}
