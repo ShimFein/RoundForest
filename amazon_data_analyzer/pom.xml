@@ -16,6 +16,13 @@
 			<artifactId>spark-sql_2.10</artifactId> <!-- matching Scala version -->
 			<version>2.2.0</version>  <!-- matching Spark Core version -->
 		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>     <!-- NOT org.junit here -->
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<properties>
